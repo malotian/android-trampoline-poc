@@ -1,0 +1,103 @@
+@startuml Trampoline Routing Flow
+!theme plain
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam backgroundColor #FAFAFA
+skinparam sequence {
+    ArrowColor      #CC0000
+    LifeLineBorderColor #888888
+    ParticipantBorderColor #555555
+    ParticipantBackgroundColor #FFFFFF
+    BoxBorderColor  #CCCCCC
+    BoxBackgroundColor #F5F5F5
+}
+
+title Trampoline Pattern — URL Routing Flow\n(High-Level)
+
+actor       "User"                                  as User
+participant "External App\n(Gmail / SMS / Browser)" as ExtApp  #FFE8E8
+participant "Android OS\nIntent Router"             as OS      #E8F0FF
+participant "TrampolineActivity\n(Traffic Cop)"     as TA      #FFDDDD
+participant "PathClassifier\n+ RoutingConfig"       as PC      #FFF3E0
+participant "BrowserResolver"                       as BR      #E8FFE8
+
+box "Routed Destinations" #F0F8FF
+  participant "DeepLink\nDestinationActivity" as DL  #DDEEFF
+  participant "Chrome\nCustom Tab"            as CCT #DDEEFF
+  participant "System\nBrowser"               as SB  #DDEEFF
+end box
+
+== 1. User taps a link ==
+
+User    ->  ExtApp : taps staples.com link
+ExtApp  ->  OS     : fires ACTION_VIEW intent\nhttps://www.staples.com/<path>
+
+note over OS
+  App Link verification check.
+  Domain must be marked **verified**
+  (via adb override or assetlinks.json).
+end note
+
+OS      ->  TA     : delivers intent to\nTrampolineActivity\n(invisible — Theme.Transparent)
+
+== 2. Classification ==
+
+TA      ->  PC     : classify(uri)
+
+note right of PC
+  Checks **uri.path** against
+  **DEFAULT_CONFIG** prefix lists:
+  ----
+  appDeepLinkPrefixes:
+    /product/, /p/, /c/, /deals/, /s/
+  authPrefixes:
+    /idm/api/*, /login, /signin, /auth/
+  browserOnlyPrefixes:
+    /lp/*, /legal/, /unsubscribe, ...
+  ----
+  Returns a **RouteBucket** sealed class.
+end note
+
+PC      --> TA     : RouteBucket result
+
+== 3. Routing ==
+
+alt RouteBucket.AppDeepLink
+    TA  ->  DL  : startActivity(\n  DeepLinkDestinationActivity\n  + EXTRA_PATH)
+
+else RouteBucket.Auth
+    TA  ->  BR  : resolveCustomTabsPackage()
+    BR  --> TA  : chrome package (or fallback browser)
+    TA  ->  CCT : CustomTabsIntent\n.launchUrl(uri, package=chrome)
+
+else RouteBucket.BrowserOnly
+    TA  ->  BR  : resolveDefaultBrowserPackage()
+    BR  --> TA  : browser package name
+    TA  ->  SB  : startActivity(\n  ACTION_VIEW + setPackage(browser))
+    
+    note right of TA
+      **How bounce loops are prevented:**
+      By explicitly calling ""intent.setPackage(browserName)"",
+      Android sends the intent directly to that specific app.
+      This bypasses the OS Intent Router (which checks App Links),
+      preventing our app from re-intercepting its own intent.
+    end note
+
+else RouteBucket.AuthCallback
+    TA  ->  TA  : handleAuthCallback(uri)\n[POC: logs only;\n production: extract OAuth token]
+
+else RouteBucket.Unknown
+    TA  ->  BR  : resolveDefaultBrowserPackage()
+    TA  ->  SB  : fallback browser
+end
+
+== 4. Cleanup ==
+
+TA -> TA : finish()\nnoHistory=true → removed\nfrom back-stack instantly
+
+note over TA
+  No UI shown. No back-stack entry.
+  User never "sees" TrampolineActivity.
+end note
+
+@enduml

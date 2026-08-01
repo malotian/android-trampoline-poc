@@ -40,9 +40,9 @@ class MainActivity : Activity() {
         )
 
         val domain = "www.staples.com"
-        layout.addView(trampolineButton("App-Deep-Link (Ergonomic Chair)", "http://$domain/product/ergonomic-chair"))
-        layout.addView(trampolineButton("App-Overlay-Browser (SDC Login)", "http://$domain/idm/api/identityProxy/sdc/login"))
-        layout.addView(trampolineButton("System-Browser (Easy Rewards)", "http://$domain/lp/easyrewardsoverview"))
+        layout.addView(trampolineButton("🛒  Product Page  →  Native Screen",        "https://$domain/product/ergonomic-chair"))
+        layout.addView(trampolineButton("🔐  Auth / Login  →  Custom Tab Overlay",   "https://$domain/idm/api/identityProxy/sdc/login"))
+        layout.addView(trampolineButton("📋  Promo / Legal  →  System Browser",       "https://$domain/lp/easyrewardsoverview"))
 
         setContentView(layout)
     }

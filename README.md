@@ -1,67 +1,166 @@
-# Trampoline Pattern — Sample App (POC)
+# Trampoline Pattern — POC App
 
-This is a minimal implementation of the **Trampoline Pattern** to handle App Link routing and Authentication isolation for the Staples Android app. It serves as a "Traffic Cop" to classify incoming URLs and route them to the correct destination while preventing common issues like browser loops.
+A minimal implementation of the **Trampoline Pattern** for the Staples Android app. Acts as a "Traffic Cop" — a single, transparent entry point that classifies every incoming `staples.com` URL and routes it to the correct destination, preventing browser bounce loops.
 
 ---
 
-## 1. Core Routing Logic (The 3 Buckets)
+## Routing Logic — The 3 Buckets
 
-The app classifies incoming URLs into three distinct "buckets":
-
-| Bucket Name | Logic Path | Resulting Behavior |
+| Bucket | URL Path Prefixes | Destination |
 | :--- | :--- | :--- |
-| **App-Deep-Link** | `/product/*`, `/p/*` | Routes directly to a **Native Activity**. |
-| **App-Overlay-Browser**| `/idm/api/*` | Opens the URL in a **Chrome Custom Tab** (Overlay). |
-| **System-Browser** | `/lp/*`, `/unsubscribe` | Launches the user's **Default Browser** explicitly. |
+| **App-Deep-Link** | `/product/`, `/p/`, `/c/`, `/deals/`, `/s/` | Native `DeepLinkDestinationActivity` |
+| **App-Overlay-Browser** | `/idm/api/*`, `/login`, `/signin`, `/sign-in`, `/auth/` | Chrome Custom Tab (overlay) |
+| **System-Browser** | `/lp/*`, `/legal/`, `/unsubscribe`, `/terms`, `/privacy-policy` | Default browser (explicit package, no bounce loop) |
+| **AuthCallback** | `com.staples.trampolinepoc://callback` | Handled in-app (OAuth return) |
+| **Unknown** | anything else | Falls back to default browser |
 
 ---
 
-## 2. Technical Implementation Details
+## How to Build & Run
 
-### The "Traffic Cop" (`TrampolineActivity`)
-A UI-less, transparent activity that acts as the single entry point for all domain links.
-- **Invisible:** Uses `Theme.Transparent` to avoid screen flicker.
-- **Hygiene:** Uses `noHistory="true"` and `excludeFromRecents="true"` to stay out of the back-stack.
-
-### Browser Resolution & Loop Fix
-To prevent the "bounce loop" (where a browser link triggers the app again), we use **Explicit Intents**:
-- The `BrowserResolver` finds the user's preferred browser package (e.g., `com.android.chrome`).
-- The intent is fired with `intent.setPackage(browserPackage)`.
-- This tells Android to **skip** App Link verification for that launch and go straight to the web.
-
-### Custom Tab Fallback
-- The app detects if the default browser supports Custom Tabs.
-- If not, it falls back to any installed CCT-capable browser, or finally a plain system browser.
-
----
-
-## 3. How to Run and Test
-
-### Phase 1 — Run the unit tests (no device needed)
+### Step 1 — Unit tests (no device needed)
 ```bash
 ./gradlew test
 ```
-This verifies the classification logic and browser resolution rules.
+Verifies all routing classification logic and browser resolution rules via Robolectric.
 
-### Phase 2 — Manual Testing (Dashboard)
-1. Run the `app` module on an emulator (Android 13 recommended).
-2. Use the 3 buttons on the dashboard to test each bucket internally.
-3. The **App-Deep-Link** button will show a native screen with a 🪑 icon.
-
-### Phase 3 — External Link Testing (Gmail/SMS)
-On Android 12+, `http` links require domain verification. Since this is a POC, run this command to **force-enable** Staples links for the app:
-
+### Step 2 — Install on device / emulator
+Run the `app` module from Android Studio, or:
 ```bash
-adb shell pm set-app-links-user-selection --user 0 --package com.staples.trampolinepoc true staples.com www.staples.com
+./gradlew installDebug
 ```
-
-**Test Links for Copy-Paste:**
-- **Product:** http://www.staples.com/product/ergonomic-chair
-- **Auth:** http://www.staples.com/idm/api/identityProxy/sdc/login
-- **Regulatory:** http://www.staples.com/lp/easyrewardsoverview
 
 ---
 
-## 4. Future Integration
+## Fresh Install Setup (Required — Android 12+)
 
-Once proven, port `PathClassifier.kt`, `BrowserResolver.kt`, and `TrampolineActivity.kt` into the production app. Replace the dummy destinations with real product screens and handle the OAuth token in `handleAuthCallback`.
+Android 12+ requires **Digital Asset Links verification** before the OS automatically routes `http(s)://staples.com` links to the app. Since this is a POC with no server-side asset file, run this command once after every fresh install to force-enable the links:
+
+```bash
+adb shell pm set-app-links-user-selection \
+  --user 0 \
+  --package com.staples.trampolinepoc \
+  true \
+  staples.com www.staples.com
+```
+
+> **Why this is needed:** On Android 12+, `autoVerify="true"` in the manifest triggers a domain verification request at install time. Without a valid `/.well-known/assetlinks.json` on the domain, verification fails and the OS will not auto-route links. The `adb` command manually overrides this for development. See the [Digital Asset Links](#digital-asset-links-production-path) section below to eliminate this step permanently.
+
+### Confirm it worked
+```bash
+adb shell pm get-app-links --user 0 com.staples.trampolinepoc
+```
+You should see `staples.com: verified` and `www.staples.com: verified` in the output.
+
+---
+
+## Testing the Buckets
+
+### Dashboard (internal — no adb needed)
+Launch the app. Use the 3 buttons to fire each bucket through `TrampolineActivity` directly:
+- **App-Deep-Link** → shows the native `DeepLinkDestinationActivity` with the path
+- **App-Overlay-Browser** → opens SDC login in a Chrome Custom Tab
+- **System-Browser** → opens Easy Rewards page in the default browser
+
+### External Link Testing (Gmail / SMS / Browser)
+Paste these URLs into Gmail or an SMS on the test device. Tap the link — the app should intercept and route it.
+
+| Bucket | URL |
+| :--- | :--- |
+| App-Deep-Link | `https://www.staples.com/product/ergonomic-chair` |
+| App-Overlay-Browser | `https://www.staples.com/idm/api/identityProxy/sdc/login` |
+| System-Browser | `https://www.staples.com/lp/easyrewardsoverview` |
+
+> Use `https://` — these match the real Staples link format and the manifest registers both `http` and `https`.
+
+---
+
+## Digital Asset Links — Production Path
+
+To eliminate the `adb` command entirely, host a `/.well-known/assetlinks.json` file on `staples.com`. The OS reads it at install time and verifies automatically — no manual step ever again.
+
+### Step 1 — Get your app's SHA-256 fingerprint
+
+**Debug builds** (for development):
+```bash
+keytool -list -v \
+  -keystore ~/.android/debug.keystore \
+  -alias androiddebugkey \
+  -storepass android \
+  -keypass android
+```
+
+**Release builds** (for production):
+```bash
+keytool -list -v \
+  -keystore /path/to/your/release.keystore \
+  -alias your-key-alias \
+  -storepass YOUR_STORE_PASS
+```
+
+Copy the `SHA256:` fingerprint from the output — it looks like:
+```
+AB:CD:EF:12:34:56:78:90:...
+```
+
+### Step 2 — Create `assetlinks.json`
+
+Host this file at `https://staples.com/.well-known/assetlinks.json` and `https://www.staples.com/.well-known/assetlinks.json`:
+
+```json
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.staples.trampolinepoc",
+    "sha256_cert_fingerprints": [
+      "AB:CD:EF:12:34:56:78:90:..."
+    ]
+  }
+}]
+```
+
+> Replace the fingerprint with the value from Step 1. For production, include both the debug and release fingerprints in the array.
+
+### Step 3 — Verify domain association
+
+The file must be served with `Content-Type: application/json` and **no redirects** (it must be accessible at exactly `https://staples.com/.well-known/assetlinks.json`).
+
+Use Google's Statement List Generator & Tester to validate:
+```
+https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://staples.com&relation=delegate_permission/common.handle_all_urls
+```
+
+### Step 4 — Verify on device
+
+Reinstall the app (clean install to trigger domain verification) then:
+```bash
+adb shell pm get-app-links --user 0 com.staples.trampolinepoc
+```
+Both `staples.com` and `www.staples.com` should show `verified`.
+
+---
+
+## Technical Notes
+
+### TrampolineActivity — The "Traffic Cop"
+- **Invisible:** Uses `Theme.Transparent` — no screen flicker when routing
+- **No back-stack pollution:** `noHistory="true"` + `excludeFromRecents="true"`
+- **Loop prevention:** `BrowserResolver` pins the explicit browser package name on the intent (`intent.setPackage(browserPackage)`), bypassing App Link verification for that launch
+
+### Custom Tab Fallback Chain
+1. Default browser, if it supports Custom Tabs → use it
+2. Any other installed browser that supports Custom Tabs → use it
+3. No CCT support anywhere → fall back to explicit plain browser intent
+
+---
+
+## Porting to Production
+
+Copy these three files into the production app and wire them up:
+
+| File | What to replace |
+| :--- | :--- |
+| `PathClassifier.kt` | Update `DEFAULT_CONFIG` prefixes to match production URL patterns |
+| `BrowserResolver.kt` | No changes needed — generic |
+| `TrampolineActivity.kt` | Replace `routeToAppDeepLink` stub with real PDP/destination routing; implement `handleAuthCallback` with real OAuth token handling |

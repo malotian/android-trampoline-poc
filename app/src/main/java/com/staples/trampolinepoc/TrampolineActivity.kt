@@ -35,16 +35,15 @@ class TrampolineActivity : Activity() {
             return
         }
 
-        Log.d(TAG, "Routing URI: $uri")
         val bucket = PathClassifier.classify(uri)
-        Toast.makeText(this, "Classified as: ${bucket::class.simpleName}", Toast.LENGTH_SHORT).show()
+        Log.d(TAG, "Routing URI: $uri → ${bucket::class.simpleName}")
 
         when (bucket) {
             is RouteBucket.AppDeepLink -> routeToAppDeepLink(bucket.path)
-            RouteBucket.Auth -> routeToCustomTab(uri)
-            RouteBucket.BrowserOnly -> routeToExplicitBrowser(uri)
-            RouteBucket.AuthCallback -> handleAuthCallback(uri)
-            is RouteBucket.Unknown -> {
+            RouteBucket.Auth          -> routeToCustomTab(uri)
+            RouteBucket.BrowserOnly   -> routeToExplicitBrowser(uri)
+            RouteBucket.AuthCallback  -> handleAuthCallback(uri)
+            is RouteBucket.Unknown    -> {
                 Log.w(TAG, "Unclassified path '${bucket.path}' — falling back to browser.")
                 routeToExplicitBrowser(uri)
             }
@@ -53,9 +52,11 @@ class TrampolineActivity : Activity() {
     }
 
     private fun routeToAppDeepLink(path: String) {
-        startActivity(Intent(this, DeepLinkDestinationActivity::class.java).apply {
-            putExtra(DeepLinkDestinationActivity.EXTRA_PATH, path)
-        })
+        startActivity(
+            Intent(this, DeepLinkDestinationActivity::class.java).apply {
+                putExtra(DeepLinkDestinationActivity.EXTRA_PATH, path)
+            },
+        )
     }
 
     private fun routeToCustomTab(uri: Uri) {

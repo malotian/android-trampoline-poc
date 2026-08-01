@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 
 /**
- * The "Traffic Cop" from the approach doc.
+ * The "Traffic Cop" that classifies and routes incoming Intents.
  */
 class TrampolineActivity : Activity() {
 
@@ -17,8 +17,7 @@ class TrampolineActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate: Activity started with intent: $intent")
-        Log.d(TAG, "Data URI: ${intent?.data}")
+        Log.d(TAG, "onCreate: Data URI: ${intent?.data}")
         browserResolver = BrowserResolver(this)
         handleIntent(intent)
     }
@@ -30,15 +29,13 @@ class TrampolineActivity : Activity() {
     }
 
     private fun handleIntent(intent: Intent?) {
-        val uri = intent?.data
-        if (uri == null) {
-            Log.w(TAG, "Trampoline invoked with no data URI — nothing to route.")
+        val uri = intent?.data ?: run {
+            Log.w(TAG, "Trampoline invoked with no data URI.")
             finish()
             return
         }
 
-        Log.d(TAG, "Routing incoming URI: $uri")
-
+        Log.d(TAG, "Routing URI: $uri")
         val bucket = PathClassifier.classify(uri)
         Toast.makeText(this, "Classified as: ${bucket::class.simpleName}", Toast.LENGTH_SHORT).show()
 
@@ -52,60 +49,52 @@ class TrampolineActivity : Activity() {
                 routeToExplicitBrowser(uri)
             }
         }
-
-        // Never leave the Trampoline in the back-stack
         finish()
     }
 
     private fun routeToAppDeepLink(path: String) {
-        val intent = Intent(this, DeepLinkDestinationActivity::class.java).apply {
+        startActivity(Intent(this, DeepLinkDestinationActivity::class.java).apply {
             putExtra(DeepLinkDestinationActivity.EXTRA_PATH, path)
-        }
-        startActivity(intent)
+        })
     }
 
     private fun routeToCustomTab(uri: Uri) {
         val ccTabsPackage = browserResolver.resolveCustomTabsPackage()
-        Log.d(TAG, "Custom Tabs package resolved to: $ccTabsPackage")
+        Log.d(TAG, "Custom Tabs package: $ccTabsPackage")
 
         if (ccTabsPackage == null) {
-            Log.w(TAG, "No Custom-Tabs-capable browser found — falling back to plain browser.")
             routeToExplicitBrowser(uri)
             return
         }
 
-        val customTabsIntent = CustomTabsIntent.Builder()
+        CustomTabsIntent.Builder()
             .setShowTitle(true)
             .build()
-
-        Log.d(TAG, "Launching Custom Tab for: $uri using package: $ccTabsPackage")
-        customTabsIntent.intent.setPackage(ccTabsPackage)
-        customTabsIntent.launchUrl(this, uri)
+            .apply {
+                intent.setPackage(ccTabsPackage)
+                launchUrl(this@TrampolineActivity, uri)
+            }
     }
 
     private fun routeToExplicitBrowser(uri: Uri) {
         val browserPackage = browserResolver.resolveDefaultBrowserPackage()
-        Log.d(TAG, "Explicit browser package resolved to: $browserPackage")
+        Log.d(TAG, "Explicit browser package: $browserPackage")
 
-        val intent = Intent(Intent.ACTION_VIEW, uri)
-        if (browserPackage != null) {
-            intent.setPackage(browserPackage)
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+            browserPackage?.let { setPackage(it) }
         }
 
         try {
-            Log.d(TAG, "Starting explicit browser activity for: $uri")
             startActivity(intent)
-        } catch (e: android.content.ActivityNotFoundException) {
-            Toast.makeText(this, "No browser available to open this link.", Toast.LENGTH_LONG).show()
-            Log.e(TAG, "No activity found to handle explicit browser intent.", e)
+        } catch (e: Exception) {
+            Toast.makeText(this, "No browser available.", Toast.LENGTH_LONG).show()
+            Log.e(TAG, "Failed to start browser intent.", e)
         }
     }
 
     private fun handleAuthCallback(uri: Uri) {
-        Log.d(TAG, "Auth callback received successfully: $uri")
+        Log.d(TAG, "Auth callback reached app: $uri")
         Toast.makeText(this, "Auth callback reached the app ✅", Toast.LENGTH_LONG).show()
-        // Production note: parse token/code from `uri`, complete sign-in,
-        // then route the user to wherever they were headed pre-auth.
     }
 
     companion object {

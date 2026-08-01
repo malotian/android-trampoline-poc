@@ -33,30 +33,15 @@
             android:excludeFromRecents="true"
             android:launchMode="singleTask">
 
-            <!-- App Link Entry (Removed https for simplicity in POC) -->
+            <!-- Primary Domain Filter: Matches ALL staples.com and www.staples.com http links -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
-                <data android:host="www.staples.com" />
-            </intent-filter>
-
-            <!-- App Link Entry: staples.com -->
-            <intent-filter android:autoVerify="true">
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" />
+                <data android:scheme="https" />
                 <data android:host="staples.com" />
-            </intent-filter>
-
-            <!-- Custom POC Scheme (Guaranteed to work without domain ownership) -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="staples" />
+                <data android:host="www.staples.com" />
             </intent-filter>
 
             <!-- OAuth Callback -->

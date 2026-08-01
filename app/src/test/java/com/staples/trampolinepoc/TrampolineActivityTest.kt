@@ -32,7 +32,7 @@ class TrampolineActivityTest {
     @Suppress("DEPRECATION")
     private fun setupBrowser(packageName: String, supportsCustomTabs: Boolean = false) {
         // Setup the browser activity
-        val intent = Intent(Intent.ACTION_VIEW, "https://example.com".toUri())
+        val intent = Intent(Intent.ACTION_VIEW, "http://example.com".toUri())
         val resolveInfo = ResolveInfo().apply {
             activityInfo = ActivityInfo().apply {
                 this.packageName = packageName
@@ -57,7 +57,7 @@ class TrampolineActivityTest {
 
     @Test
     fun `routing product URL starts DeepLinkDestinationActivity`() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/p/123"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/p/123"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity: ShadowActivity = shadowOf(activity)
 
@@ -71,7 +71,7 @@ class TrampolineActivityTest {
     fun `routing login URL with CCT support starts Custom Tab`() {
         setupBrowser("com.android.chrome", supportsCustomTabs = true)
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/login"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/login"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity = shadowOf(activity)
 
@@ -80,14 +80,14 @@ class TrampolineActivityTest {
         // CustomTabsIntent uses ACTION_VIEW and sets the package
         assertEquals(Intent.ACTION_VIEW, nextIntent.action)
         assertEquals("com.android.chrome", nextIntent.`package`)
-        assertEquals("https://www.staples.com/login", nextIntent.data.toString())
+        assertEquals("http://www.staples.com/login", nextIntent.data.toString())
     }
 
     @Test
     fun `routing login URL without CCT support starts plain Browser Intent`() {
         setupBrowser("com.some.simple.browser", supportsCustomTabs = false)
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/login"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/login"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity = shadowOf(activity)
 
@@ -104,7 +104,7 @@ class TrampolineActivityTest {
         // Secondary browser supports CCT
         setupBrowser("com.chrome.browser", supportsCustomTabs = true)
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/login"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/login"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity = shadowOf(activity)
 
@@ -118,7 +118,7 @@ class TrampolineActivityTest {
     fun `routing unsubscribe URL starts Explicit Browser Intent`() {
         setupBrowser("com.android.chrome")
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/unsubscribe"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/unsubscribe"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity = shadowOf(activity)
 
@@ -126,14 +126,14 @@ class TrampolineActivityTest {
         assertNotNull(nextIntent)
         assertEquals(Intent.ACTION_VIEW, nextIntent.action)
         assertEquals("com.android.chrome", nextIntent.`package`)
-        assertEquals("https://www.staples.com/unsubscribe", nextIntent.data.toString())
+        assertEquals("http://www.staples.com/unsubscribe", nextIntent.data.toString())
     }
 
     @Test
     fun `routing unknown URL starts Explicit Browser Intent`() {
         setupBrowser("com.android.chrome")
 
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/mystery"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/mystery"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         val shadowActivity = shadowOf(activity)
 
@@ -155,7 +155,7 @@ class TrampolineActivityTest {
 
     @Test
     fun `activity finishes immediately after routing`() {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.staples.com/p/123"))
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("http://www.staples.com/p/123"))
         val activity = Robolectric.buildActivity(TrampolineActivity::class.java, intent).create().get()
         
         assertEquals(true, activity.isFinishing)

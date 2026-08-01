@@ -30,7 +30,7 @@ class BrowserResolverTest {
     }
 
     private fun setupBrowser(packageName: String, supportsCustomTabs: Boolean = false) {
-        val intent = Intent(Intent.ACTION_VIEW, "https://example.com".toUri())
+        val intent = Intent(Intent.ACTION_VIEW, "http://example.com".toUri())
         val resolveInfo = ResolveInfo().apply {
             activityInfo = ActivityInfo().apply {
                 this.packageName = packageName

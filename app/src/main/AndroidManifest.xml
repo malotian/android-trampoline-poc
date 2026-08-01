@@ -4,7 +4,7 @@
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="https" />
+            <data android:scheme="http" />
         </intent>
         <intent>
             <action android:name="android.support.customtabs.action.CustomTabsService" />
@@ -33,23 +33,21 @@
             android:excludeFromRecents="true"
             android:launchMode="singleTask">
 
-            <!-- App Link: www.staples.com -->
+            <!-- App Link Entry (Removed https for simplicity in POC) -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
-                <data android:scheme="https" />
                 <data android:host="www.staples.com" />
             </intent-filter>
 
-            <!-- App Link: staples.com -->
+            <!-- App Link Entry: staples.com -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="http" />
-                <data android:scheme="https" />
                 <data android:host="staples.com" />
             </intent-filter>
 

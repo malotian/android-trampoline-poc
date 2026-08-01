@@ -17,14 +17,14 @@ class BrowserResolver(private val context: Context) {
      * Resolves the user's actual default browser package.
      */
     fun resolveDefaultBrowserPackage(): String? {
-        val queryIntent = Intent(Intent.ACTION_VIEW, "https://example.com".toUri())
-        val resolveInfo = packageManager.resolveActivity(queryIntent, PackageManager.MATCH_DEFAULT_ONLY)
+        val queryIntent = Intent(Intent.ACTION_VIEW, "http://example.com".toUri())
+        val resolveInfo = packageManager.resolveActivity(queryIntent, 0)
         val packageName = resolveInfo?.activityInfo?.packageName
 
         // If the "default" is our own app (because of App Links), we need to find the 
         // ACTUAL browser to avoid a loop.
         if (packageName == context.packageName) {
-            val allBrowsers = packageManager.queryIntentActivities(queryIntent, PackageManager.MATCH_ALL)
+            val allBrowsers = packageManager.queryIntentActivities(queryIntent, 0)
             return allBrowsers
                 .map { it.activityInfo.packageName }
                 .firstOrNull { it != context.packageName }
@@ -44,7 +44,7 @@ class BrowserResolver(private val context: Context) {
         }
 
         // Default browser doesn't support CCT — check other installed browsers
-        val queryIntent = Intent(Intent.ACTION_VIEW, "https://example.com".toUri())
+        val queryIntent = Intent(Intent.ACTION_VIEW, "http://example.com".toUri())
         val resolvedActivities = packageManager.queryIntentActivities(queryIntent, 0)
         return resolvedActivities
             .asSequence()

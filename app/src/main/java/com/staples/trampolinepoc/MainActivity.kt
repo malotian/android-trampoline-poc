@@ -17,13 +17,12 @@ import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 
 /**
- * Manual test harness for the Trampoline pattern.
- * Retrieves version info at runtime and uses a Staples-themed sober palette.
+ * Simplified manual test harness for the Trampoline pattern.
+ * Shows exactly 3 routing buttons using runtime version info.
  */
 class MainActivity : Activity() {
 
-    private val stagingDomain = "www.staples.com"
-    private val altDomain = "staples.com"
+    private val domain = "staples.com"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,10 +33,6 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_HORIZONTAL
             setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.background))
         }
-
-        // Use a ScrollView if content exceeds screen height
-        val scrollView = android.widget.ScrollView(this)
-        scrollView.addView(layout)
 
         // Android Version Info
         layout.addView(
@@ -51,7 +46,7 @@ class MainActivity : Activity() {
             },
         )
 
-        // Agent Version (App Version Name)
+        // Agent Version
         layout.addView(
             TextView(this).apply {
                 val versionName = try {
@@ -64,52 +59,24 @@ class MainActivity : Activity() {
                 textSize = 14f
                 setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_secondary))
                 gravity = Gravity.CENTER
-                setPadding(0, 0, 0, 48)
-            },
-        )
-
-        layout.addView(
-            TextView(this).apply {
-                text = getString(R.string.test_harness_title)
-                textSize = 20f
-                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_primary))
-                gravity = Gravity.CENTER
                 setPadding(0, 0, 0, 80)
             },
         )
 
-        val buttonSpacing = 32
-        layout.addView(testButton("App Deep Link (www /p/123)", "https://$stagingDomain/p/123"))
+        val buttonSpacing = 48
+        
+        // 1. App Deep Link Bucket
+        layout.addView(testButton("App-Deep-Link (/p/123)", "http://$domain/p/123"))
         addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("App Deep Link (no-www /p/123)", "https://$altDomain/p/123"))
+        
+        // 2. Auth Bucket (Overlay)
+        layout.addView(testButton("App-Overlay-Browser (/login)", "http://$domain/login"))
         addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("App Deep Link (Custom Scheme)", "staples://p/123"))
-        addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("Auth (www /login)", "https://$stagingDomain/login"))
-        addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("Auth (no-www /login)", "https://$altDomain/login"))
-        addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("Browser-Only (www /unsubscribe)", "https://$stagingDomain/unsubscribe"))
-        addSpacer(layout, buttonSpacing)
-        layout.addView(testButton("Auth Callback (custom scheme)", "com.staples.trampolinepoc://callback?code=test123"))
-        addSpacer(layout, buttonSpacing)
+        
+        // 3. Browser-Only Bucket (System)
+        layout.addView(testButton("System-Browser (/unsubscribe)", "http://$domain/unsubscribe"))
 
-        layout.addView(
-            TextView(this).apply {
-                text = getString(R.string.system_test_title)
-                textSize = 18f
-                setTypeface(null, Typeface.BOLD)
-                setTextColor(ContextCompat.getColor(this@MainActivity, R.color.text_primary))
-                setPadding(0, 48, 0, 24)
-            },
-        )
-
-        layout.addView(systemTestButton("Test Unsubscribe (www)", "https://$stagingDomain/unsubscribe"))
-        addSpacer(layout, buttonSpacing)
-        layout.addView(systemTestButton("Test Unsubscribe (no-www)", "https://$altDomain/unsubscribe"))
-        addSpacer(layout, buttonSpacing)
-
-        setContentView(scrollView)
+        setContentView(layout)
     }
 
     private fun addSpacer(layout: LinearLayout, height: Int) {
@@ -119,28 +86,6 @@ class MainActivity : Activity() {
     }
 
     private fun testButton(label: String, url: String): Button {
-        return createStyledButton(label).apply {
-            setOnClickListener {
-                Log.d("MainActivity", "Firing explicit test intent: $url")
-                val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
-                    setClass(this@MainActivity, TrampolineActivity::class.java)
-                }
-                startActivity(intent)
-            }
-        }
-    }
-
-    private fun systemTestButton(label: String, url: String): Button {
-        return createStyledButton(label).apply {
-            setOnClickListener {
-                Log.d("MainActivity", "Firing generic system intent: $url")
-                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
-                startActivity(intent)
-            }
-        }
-    }
-
-    private fun createStyledButton(label: String): Button {
         return Button(this).apply {
             text = label
             isAllCaps = false
@@ -153,12 +98,21 @@ class MainActivity : Activity() {
                 setColor(ContextCompat.getColor(context, R.color.primary))
             }
             background = shape
-            setPadding(32, 24, 32, 24)
+            setPadding(32, 40, 32, 40)
             
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
+
+            setOnClickListener {
+                Log.d("MainActivity", "Firing explicit test intent: $url")
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
+                    // Explicitly target Trampoline to bypass system verification issues in POC
+                    setClass(this@MainActivity, TrampolineActivity::class.java)
+                }
+                startActivity(intent)
+            }
         }
     }
 }

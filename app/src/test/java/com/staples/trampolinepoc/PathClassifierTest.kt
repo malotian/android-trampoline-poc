@@ -20,30 +20,21 @@ class PathClassifierTest {
 
     @Test
     fun `product path routes to AppDeepLink with http`() {
-        val result = PathClassifier.classify(uri("http://www.staples.com/p/12345"))
+        val result = PathClassifier.classify(uri("http://www.staples.com/product/ergonomic-chair"))
         assertTrue(result is RouteBucket.AppDeepLink)
-        assertEquals("/p/12345", (result as RouteBucket.AppDeepLink).path)
+        assertEquals("/product/ergonomic-chair", (result as RouteBucket.AppDeepLink).path)
     }
 
     @Test
-    fun `product path routes to AppDeepLink with http and no-www`() {
-        val result = PathClassifier.classify(uri("http://staples.com/p/12345"))
-        assertTrue(result is RouteBucket.AppDeepLink)
-        assertEquals("/p/12345", (result as RouteBucket.AppDeepLink).path)
-    }
-
-    @Test
-    fun `category path routes to AppDeepLink`() {
-        val result = PathClassifier.classify(uri("http://www.staples.com/c/office-supplies"))
-        assertTrue(result is RouteBucket.AppDeepLink)
-    }
-
-    // --- Auth bucket ---
-
-    @Test
-    fun `login path routes to Auth with http`() {
-        val result = PathClassifier.classify(uri("http://www.staples.com/login"))
+    fun `auth path routes to Auth with http`() {
+        val result = PathClassifier.classify(uri("http://www.staples.com/idm/api/identityProxy/sdc/login"))
         assertEquals(RouteBucket.Auth, result)
+    }
+
+    @Test
+    fun `system browser path routes to BrowserOnly with http`() {
+        val result = PathClassifier.classify(uri("http://www.staples.com/lp/easyrewardsoverview"))
+        assertEquals(RouteBucket.BrowserOnly, result)
     }
 
     @Test

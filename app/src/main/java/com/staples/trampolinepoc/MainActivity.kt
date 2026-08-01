@@ -66,15 +66,15 @@ class MainActivity : Activity() {
         val buttonSpacing = 48
         
         // 1. App Deep Link Bucket
-        layout.addView(testButton("App-Deep-Link (/p/123)", "http://$domain/p/123"))
+        layout.addView(testButton("App-Deep-Link (/product/ergonomic-chair)", "http://www.staples.com/product/ergonomic-chair"))
         addSpacer(layout, buttonSpacing)
         
         // 2. Auth Bucket (Overlay)
-        layout.addView(testButton("App-Overlay-Browser (/login)", "http://$domain/login"))
+        layout.addView(testButton("App-Overlay-Browser (SDC Login)", "http://www.staples.com/idm/api/identityProxy/sdc/login"))
         addSpacer(layout, buttonSpacing)
         
         // 3. Browser-Only Bucket (System)
-        layout.addView(testButton("System-Browser (/unsubscribe)", "http://$domain/unsubscribe"))
+        layout.addView(testButton("System-Browser (Easy Rewards)", "http://www.staples.com/lp/easyrewardsoverview"))
 
         setContentView(layout)
     }

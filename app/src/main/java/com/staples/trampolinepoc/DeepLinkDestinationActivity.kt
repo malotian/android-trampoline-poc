@@ -15,12 +15,29 @@ class DeepLinkDestinationActivity : Activity() {
         super.onCreate(savedInstanceState)
         val path = intent?.getStringExtra(EXTRA_PATH) ?: "(no path)"
 
-        val textView = TextView(this).apply {
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            gravity = android.view.Gravity.CENTER_HORIZONTAL
+            setPadding(48, 128, 48, 48)
+        }
+
+        if (path.contains("chair", ignoreCase = true)) {
+            layout.addView(android.widget.TextView(this).apply {
+                text = "\uD83E\uDE91" // Chair emoji
+                textSize = 100f
+                gravity = android.view.Gravity.CENTER
+            })
+        }
+
+        val textView = android.widget.TextView(this).apply {
             text = getString(R.string.dest_reached_success, path)
             textSize = 18f
-            setPadding(48, 96, 48, 48)
+            gravity = android.view.Gravity.CENTER
+            setPadding(0, 48, 0, 0)
         }
-        setContentView(textView)
+        layout.addView(textView)
+        
+        setContentView(layout)
     }
 
     companion object {

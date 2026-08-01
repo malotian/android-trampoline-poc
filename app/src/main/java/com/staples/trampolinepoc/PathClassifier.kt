@@ -33,9 +33,9 @@ data class RoutingConfig(
 object PathClassifier {
 
     val DEFAULT_CONFIG = RoutingConfig(
-        authPrefixes = listOf("/login", "/signin", "/sign-in", "/auth/"),
-        browserOnlyPrefixes = listOf("/legal/", "/unsubscribe", "/accessibility", "/terms", "/privacy-policy"),
-        appDeepLinkPrefixes = listOf("/p/", "/c/", "/deals/", "/s/")
+        authPrefixes = listOf("/login", "/signin", "/sign-in", "/auth/", "/idm/api/identityProxy/sdc/login"),
+        browserOnlyPrefixes = listOf("/legal/", "/unsubscribe", "/accessibility", "/terms", "/privacy-policy", "/lp/easyrewardsoverview"),
+        appDeepLinkPrefixes = listOf("/p/", "/c/", "/deals/", "/s/", "/product/")
     )
 
     fun classify(uri: Uri, config: RoutingConfig = DEFAULT_CONFIG): RouteBucket {

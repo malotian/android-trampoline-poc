@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Trampoline POC</string>
+    <string name="dest_reached_success">✅ Reached native deep-link destination for path:\n%1$s</string>
+    <string name="test_harness_title">Trampoline POC — manual bucket test triggers</string>
+    <string name="system_test_title">System Resolution Tests (Real behavior)</string>
+    <string name="android_version_label">Android Version: %1$s (API %2$d)</string>
+    <string name="agent_version_label">Agent Version: %1$s</string>
+</resources>

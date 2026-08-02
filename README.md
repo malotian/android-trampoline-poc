@@ -19,6 +19,8 @@
 
 ## Routing Flow Diagram
 
+![routing-flow](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/malotian/android-trampoline-poc/master/docs/routing-flow.puml)
+
 > Full diagram source: [`docs/routing-flow.puml`](docs/routing-flow.puml)  
 > Render at [planttext.com](https://www.planttext.com) or with any PlantUML plugin.
 

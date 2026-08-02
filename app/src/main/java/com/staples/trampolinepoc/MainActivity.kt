@@ -9,6 +9,7 @@ import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 
@@ -40,15 +41,19 @@ class MainActivity : Activity() {
         )
 
         val domain = "www.staples.com"
-        layout.addView(trampolineButton("🛒  Product Page  →  Native Screen",        "https://$domain/product/ergonomic-chair"))
-        layout.addView(trampolineButton("🔐  Auth / Login  →  Custom Tab Overlay",   "https://$domain/idm/api/identityProxy/sdc/login"))
-        layout.addView(trampolineButton("📋  Promo / Legal  →  System Browser",       "https://$domain/lp/easyrewardsoverview"))
+        layout.addView(trampolineButton("Product Page → Native Screen", "https://$domain/product/ergonomic-chair", R.drawable.ic_chair))
+        layout.addView(trampolineButton("🔐 Auth / Login → Custom Tab Overlay", "https://$domain/idm/api/identityProxy/sdc/login"))
+        layout.addView(trampolineButton("📋 Promo / Legal → System Browser", "https://$domain/lp/easyrewardsoverview"))
 
         setContentView(layout)
     }
 
-    private fun trampolineButton(label: String, url: String) = Button(this, null, 0, R.style.ButtonPrimary).apply {
+    private fun trampolineButton(label: String, url: String, iconRes: Int? = null) = Button(this, null, 0, R.style.ButtonPrimary).apply {
         text = label
+        iconRes?.let {
+            setCompoundDrawablesWithIntrinsicBounds(it, 0, 0, 0)
+            compoundDrawablePadding = 32
+        }
         
         // Add vertical spacing between buttons
         layoutParams = LinearLayout.LayoutParams(
@@ -60,8 +65,10 @@ class MainActivity : Activity() {
 
         setOnClickListener {
             Log.d(TAG, "Firing test intent: $url")
+            Toast.makeText(this@MainActivity, "Action: $url", Toast.LENGTH_SHORT).show()
             startActivity(Intent(Intent.ACTION_VIEW, url.toUri()).apply {
                 setClass(this@MainActivity, TrampolineActivity::class.java)
+                putExtra(TrampolineActivity.EXTRA_CAPTION, label)
             })
         }
     }

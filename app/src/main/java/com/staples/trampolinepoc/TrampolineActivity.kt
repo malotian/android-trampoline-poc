@@ -36,10 +36,23 @@ class TrampolineActivity : Activity() {
         }
 
         val bucket = PathClassifier.classify(uri)
-        Log.d(TAG, "Routing URI: $uri → ${bucket::class.simpleName}")
+        val bucketName = bucket::class.simpleName ?: "Unknown"
+        val caption = intent.getStringExtra(EXTRA_CAPTION) ?: ""
+        Log.d(TAG, "Routing URI: $uri → $bucketName")
+
+
+        val destinationType = when (bucket) {
+            is RouteBucket.AppDeepLink -> "Native Screen"
+            RouteBucket.Auth -> "Custom Tab Overlay"
+            RouteBucket.BrowserOnly -> "System Browser"
+            RouteBucket.AuthCallback -> "Auth Success"
+            else -> "Browser Fallback"
+        }
+
+        Toast.makeText(this, "Middle (Routing): Routing to $destinationType", Toast.LENGTH_SHORT).show()
 
         when (bucket) {
-            is RouteBucket.AppDeepLink -> routeToAppDeepLink(bucket.path)
+            is RouteBucket.AppDeepLink -> routeToAppDeepLink(bucket.path, caption)
             RouteBucket.Auth          -> routeToCustomTab(uri)
             RouteBucket.BrowserOnly   -> routeToExplicitBrowser(uri)
             RouteBucket.AuthCallback  -> handleAuthCallback(uri)
@@ -51,10 +64,11 @@ class TrampolineActivity : Activity() {
         finish()
     }
 
-    private fun routeToAppDeepLink(path: String) {
+    private fun routeToAppDeepLink(path: String, caption: String? = null) {
         startActivity(
             Intent(this, DeepLinkDestinationActivity::class.java).apply {
                 putExtra(DeepLinkDestinationActivity.EXTRA_PATH, path)
+                caption?.let { putExtra(DeepLinkDestinationActivity.EXTRA_CAPTION, it) }
             },
         )
     }
@@ -95,10 +109,10 @@ class TrampolineActivity : Activity() {
 
     private fun handleAuthCallback(uri: Uri) {
         Log.d(TAG, "Auth callback reached app: $uri")
-        Toast.makeText(this, "Auth callback reached the app ✅", Toast.LENGTH_LONG).show()
     }
 
     companion object {
         private const val TAG = "TrampolineActivity"
+        const val EXTRA_CAPTION = "extra_caption"
     }
 }

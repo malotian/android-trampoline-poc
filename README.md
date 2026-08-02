@@ -108,7 +108,7 @@ After running the `adb` setup command, paste any of these into Gmail or SMS and 
 
 | Bucket | Test URL |
 | :--- | :--- |
-| 🛒 App-Deep-Link | `https://www.staples.com/product/ergonomic-chair` |
+| 🪑 App-Deep-Link | `https://www.staples.com/product/ergonomic-chair` |
 | 🔐 App-Overlay-Browser | `https://www.staples.com/idm/api/identityProxy/sdc/login` |
 | 📋 System-Browser | `https://www.staples.com/lp/easyrewardsoverview` |
 

@@ -11,7 +11,6 @@ import androidx.core.net.toUri
 class BrowserResolver(private val context: Context) {
 
     private val packageManager: PackageManager = context.packageManager
-
     fun resolveDefaultBrowserPackage(): String? {
         val queryIntent = Intent(Intent.ACTION_VIEW, "http://example.com".toUri())
         val resolveInfo = packageManager.resolveActivity(queryIntent, 0)

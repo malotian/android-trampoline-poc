@@ -42,8 +42,8 @@ class MainActivity : Activity() {
 
         val domain = "www.staples.com"
         layout.addView(trampolineButton("Product Page → Native Screen", "https://$domain/product/ergonomic-chair", R.drawable.ic_chair))
-        layout.addView(trampolineButton("🔐 Auth / Login → Custom Tab Overlay", "https://$domain/idm/api/identityProxy/sdc/login"))
-        layout.addView(trampolineButton("📋 Promo / Legal → System Browser", "https://$domain/lp/easyrewardsoverview"))
+        layout.addView(trampolineButton("Auth / Login → Custom Tab Overlay", "https://$domain/idm/api/identityProxy/sdc/login", R.drawable.ic_lock))
+        layout.addView(trampolineButton("Promo / Legal → System Browser", "https://$domain/lp/easyrewardsoverview", R.drawable.ic_legal))
 
         setContentView(layout)
     }

@@ -72,15 +72,25 @@ else RouteBucket.Auth
 
 else RouteBucket.BrowserOnly
     TA  ->  BR  : resolveDefaultBrowserPackage()
-    BR  --> TA  : browser package name
-    TA  ->  SB  : startActivity(\n  ACTION_VIEW + setPackage(browser))
+
+    note right of BR
+      **Cycle Prevention (Discovery):**
+      1. Asks OS: "Who is the default handler?"
+      2. If OS says "**StaplesApp**", it finds the
+         **next best** browser (Chrome, Firefox).
+      3. Returns that browser package name.
+    end note
+
+    BR  --> TA  : browser package name (e.g. "com.android.chrome")
+
+    TA  ->  SB  : startActivity(\n  ACTION_VIEW + **setPackage(browser)**)
     
     note right of TA
-      **How bounce loops are prevented:**
-      By explicitly calling ""intent.setPackage(browserName)"",
-      Android sends the intent directly to that specific app.
-      This bypasses the OS Intent Router (which checks App Links),
-      preventing our app from re-intercepting its own intent.
+      **Cycle Prevention (Handoff):**
+      By switching from **Implicit** to **Explicit**
+      addressing (via ""setPackage""), we "force" the
+      intent to the browser. This prevents our app
+      from intercepting its own intent again.
     end note
 
 else RouteBucket.AuthCallback

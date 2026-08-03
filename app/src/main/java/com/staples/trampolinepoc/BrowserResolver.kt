@@ -45,6 +45,7 @@ class BrowserResolver(private val context: Context) {
         return packageManager.resolveService(serviceIntent, 0) != null
     }
 
+    // enhanced routing - not used yet
     fun resolveDefaultBrowserPackageEx(): String? {
         // This is the cleanest way to ask Android for the user's primary browser choice
         // without worrying about domain-specific intent filters.
@@ -57,7 +58,7 @@ class BrowserResolver(private val context: Context) {
             return selectorPackage
         }
 
-        // STEP 2: Fallback to resolving a generic web intent.
+        // STEP 2: Fallback to resolving a generic web intent
         // If the selector above failed (older Android versions or specific device ROMs),
         // we ask the system who would handle a generic "example.com" URL.
         // We use 'example.com' specifically because our app does NOT have intent filters

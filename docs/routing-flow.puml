@@ -62,15 +62,15 @@ PC      --> TA     : RouteBucket result
 
 == 3. Routing ==
 
-alt RouteBucket.AppDeepLink
+alt RouteBucket.AppDeepLink (Native Path)
     TA  ->  DL  : startActivity(\n  DeepLinkDestinationActivity\n  + EXTRA_PATH)
 
-else RouteBucket.Auth
+else RouteBucket.Auth (Overlay Tab Path)
     TA  ->  BR  : resolveCustomTabsPackage()
     BR  --> TA  : chrome package (or fallback browser)
     TA  ->  CCT : CustomTabsIntent\n.launchUrl(uri, package=chrome)
 
-else RouteBucket.BrowserOnly
+else RouteBucket.BrowserOnly (System Browser Path)
     TA  ->  BR  : resolveDefaultBrowserPackage()
 
     note right of BR
@@ -92,13 +92,6 @@ else RouteBucket.BrowserOnly
       intent to the browser. This prevents our app
       from intercepting its own intent again.
     end note
-
-else RouteBucket.AuthCallback
-    TA  ->  TA  : handleAuthCallback(uri)\n[POC: logs only;\n production: extract OAuth token]
-
-else RouteBucket.Unknown
-    TA  ->  BR  : resolveDefaultBrowserPackage()
-    TA  ->  SB  : fallback browser
 end
 
 == 4. Cleanup ==
